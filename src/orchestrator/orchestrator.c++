@@ -201,7 +201,8 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
             return;
         }
     }else if(msg->get_reason()==OFPR_ACTION){
-        if(msg->get_table_id()==1 || dpt->get_dpid()!=proxy->config.AGS_dpid){
+        if(msg->get_table_id()==1 || dpt->get_dpid()!=proxy->config.AGS_dpid){ //OFPP_CONTROLLER
+            std::cout<<"Estoy aqui\n";
             uint32_t translated_port;
             translated_port=proxy->virtualizer->get_virtual_port_id(dpt->get_dpid(),msg->get_match().get_in_port());
             cofmatch match(OFP12_VERSION);
@@ -265,8 +266,8 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
                     return;            
                 }
             }catch(...){
-                delete msg; 
-                return; 
+                //delete msg; 
+                //return; 
             }
             cmacaddr OUI(proxy->config.oui_mac);
             if(msg->get_match().get_in_port()==proxy->portconfig.cmts_port && msg->get_match().get_eth_src_addr().get_mac()-OUI.get_mac()<OUI.get_mac()){
@@ -278,16 +279,22 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
             }
             //PACKET_OUT temp
             std::cout << "PACKET_OUT_TEMP\n";
+            fflush(stdout);
             std::map<uint32_t,std::map <uint32_t, cofaclist*> >::iterator it;
             std::map<uint32_t,cofaclist*>::iterator it2;
-            it=packoutcache.find(msg->get_match().get_in_port());
+            uint32_t Vinport= proxy->virtualizer->get_virtual_port_id(dpt->get_dpid(),msg->get_match().get_in_port());
+            it=packoutcache.find(Vinport);
+
             if(it!=packoutcache.end()){
-                it2=it->second.find(msg->get_buffer_id());
+                std::cout<<"Finding... Port: "<< Vinport <<"Buffer-id: "<< msg->get_buffer_id()-1 <<"\n";
+                it2=it->second.find(msg->get_buffer_id()-1); //added -1
                 if(it2!=it->second.end()){
+                    std::cout<<"FOUND!\n";
                     process_packet_out(msg->get_match().get_in_port(),(*it2->second),msg->get_packet().soframe(),msg->get_packet().payload()->framelen());
                 }
                 //proxy->send_packet_out_message(dpt,it->first,)
             }
+            std::cout<<"not found! :(\n";
             packoutcache.erase(msg->get_buffer_id());
             fflush(stdout);
             
@@ -553,7 +560,7 @@ void      orchestrator::handle_timeout(int opaque){
 /*******************************  PACKET_OUT *****************************************/
 void      orchestrator::handle_packet_out (cofctl *ctl, cofmsg_packet_out *msg){
     if(msg->get_buffer_id()==OFP_NO_BUFFER){//packet attached to message
-        //std::cout<<"packeout received NO BUFFER\n";
+        std::cout<<"packeout received NO BUFFER\n";
         uint8_t *data;
         data=msg->get_packet().soframe();
         size_t datalen = msg->get_packet().framelen();
@@ -563,6 +570,7 @@ void      orchestrator::handle_packet_out (cofctl *ctl, cofmsg_packet_out *msg){
         cofaclist* temp = new cofaclist (OFP10_VERSION);
         (*temp)=msg->get_actions();
         packoutcache [msg->get_in_port()][msg->get_buffer_id()] =temp;
+        std::cout<<"packeout cached with BUFFER-ID "<< msg->get_buffer_id()<<"\n";
         cofaclist list (OFP12_VERSION);
         list.next() = cofaction_output(OFP12_VERSION,OFPP12_CONTROLLER);
         uint32_t realport = proxy->virtualizer->get_real_port_id(msg->get_in_port());
@@ -576,10 +584,10 @@ void      orchestrator::handle_packet_out (cofctl *ctl, cofmsg_packet_out *msg){
 void      orchestrator::process_packet_out(uint32_t inport,cofaclist list, uint8_t *data,size_t datalen){
     
     flowpath packetouts;
-    //std::cout<<"packeout Processing\n";
+    std::cout<<"packeout Processing\n";
     cofmatch common_match (OFP12_VERSION);
-    process_action_list(packetouts,common_match,list, OFP10_VERSION, inport,0xFF,OFPT10_PACKET_OUT);
-    //std::cout<<"packeout Processing completed\n";
+    process_action_list(&packetouts,common_match,list, OFP10_VERSION, inport,0xFF,OFPT10_PACKET_OUT);
+    std::cout<<"packeout Processing completed\n";
     std::map<uint64_t , cflowentry*>::iterator it;
     for(it=packetouts.flowmodlist.begin();it!=packetouts.flowmodlist.end();++it){
 
@@ -924,7 +932,7 @@ cofmatch  orchestrator::process_matching(cofmsg_flow_mod *msg, uint8_t ofversion
         }catch(eOFmatchNotFound& e){}
         
         try{ //OF 1.0
-            common_match.set_vlan_vid(msg->get_match().get_vlan_vid());
+            //common_match.set_vlan_vid(msg->get_match().get_vlan_vid());
             //std::cout<<"vid_not_wildcarded: "<<msg->get_match().get_vlan_vid()<<"\n";
 
         }catch(eOFmatchNotFound& e){}
@@ -990,9 +998,7 @@ cofmatch  orchestrator::process_matching(cofmsg_flow_mod *msg, uint8_t ofversion
 bool      orchestrator::process_action_list(flowpath &flows,cofmatch common_match,cofaclist aclist, uint8_t ofversion, uint32_t inport,uint8_t nw_proto, uint8_t message){
     flowpath flowlist;
     flowlist.longest=0;
-    //std::cout<<"1\n";
     cofinlist instrlist;
-    //std::cout<<"2\n";
     cofmatch filling_match (OFP12_VERSION,OFPMT_OXM);
     //std::cout<<"3\n";
     if(message!=OFPT10_PACKET_OUT){
@@ -1031,6 +1037,7 @@ bool      orchestrator::process_action_list(flowpath &flows,cofmatch common_matc
                 switch (htobe16((*it).oac_oacu.oacu_header->type)) {
                     
                     case OFP10AT_OUTPUT:{ //overwrite corresponding virtual port w/ real port
+                        std::cout<<"OFP10_OUTPUT_PKT_OUT\n";
                         anyoutput=true;
                         std::cout<<"SET_OUTPORT: "<< (uint16_t)htobe16((*it).oac_oacu.oacu_10output->port) <<"\n";
                         uint8_t flowtype;
