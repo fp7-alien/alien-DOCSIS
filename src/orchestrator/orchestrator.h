@@ -70,6 +70,7 @@ public:
     void flow_mod_delete(cofctl *ctl, cofmsg_flow_mod *msg, bool strict);
 cofmatch process_matching(cofmsg_flow_mod *msg, uint8_t ofversion = OFP10_VERSION);
 cofmatch process_matching(cofmatch match, uint8_t ofversion = OFP10_VERSION);
+    void process_output_actions(flowpath &flows,cofaclist aclist, uint8_t ofversion, uint32_t inport, uint8_t nw_proto,uint8_t *data,size_t datalen);
     bool process_action_list(flowpath &flows,cofmatch common_match,cofaclist aclist, uint8_t ofversion, uint32_t inport, uint8_t nw_proto, uint8_t message);
     bool process_action_list2(flowpath &flows,cofmatch common_match,cofaclist aclist, uint8_t ofversion, uint32_t inport, uint8_t nw_proto, uint8_t message);
     void fill_flowpath(flowpath &flows,cofmatch common_match, cofaclist aclist,uint32_t inport,uint32_t outport, uint8_t flowtype);
@@ -80,6 +81,7 @@ cofmatch process_matching(cofmatch match, uint8_t ofversion = OFP10_VERSION);
     void handle_packet_out (cofctl *ctl, cofmsg_packet_out *msg);
     void process_packet_out(uint32_t inport,cofaclist list, uint8_t *data,size_t datalen);
     void fill_packetouts(flowpath &flows,cofaclist aclist,uint32_t inport, uint32_t outport, uint8_t flowtype);
+    void fill_packetouts2(flowpath &flows,cofaclist aclist,uint32_t inport, uint32_t outport,uint8_t *data,size_t datalen);
     void flow_test(cofdpt* dpt);
     uint8_t typeflow(uint64_t src_dpid,uint64_t dst_dpid);
     uint8_t typeflow2(uint32_t inport,uint32_t outport);
