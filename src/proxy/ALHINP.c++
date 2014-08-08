@@ -171,7 +171,7 @@ void ALHINP::handle_dpath_open(cofdpt* dpt){
         manager->OUI_connected(dpt);
         //This not should be like this, the controller should verify that ports for Flow Mods exist
         std::cout<<"Trying to connect controller @ "<< config.controller_ip.c_str() << "\n";
-        rpc_connect_to_ctl(OFP10_VERSION,1,caddress(AF_INET,config.controller_ip.c_str(),config.controller_port));
+        rpc_connect_to_ctl(OFP10_VERSION,5,caddress(AF_INET,config.controller_ip.c_str(),config.controller_port));
         
     }
 
@@ -196,6 +196,8 @@ void ALHINP::handle_ctrl_open(cofctl *ctl){
 void ALHINP::handle_ctrl_close(cofctl *ctl){
     controller=0;
     std::cout<<"[WARNING]: Controller disconnected\n";
+    rpc_connect_to_ctl(OFP10_VERSION,5,caddress(AF_INET,config.controller_ip.c_str(),config.controller_port));
+    
 }
 
 void ALHINP::handle_timeout(int opaque){
