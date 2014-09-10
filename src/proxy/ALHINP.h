@@ -103,7 +103,7 @@ private:
     
 //  virtual void handle_error (cofdpt *dpt, cofmsg_error *msg);
 
-//  virtual void handle_queue_get_config_request (cofctl *ctl, cofmsg_queue_get_config_request *msg);    
+  virtual void handle_queue_get_config_request (cofctl *ctl, cofmsg_queue_get_config_request *msg);    
 //  virtual void handle_queue_get_config_reply (cofdpt *dpt, cofmsg_queue_get_config_reply *msg);
 
 //  virtual void handle_aggregate_stats_reply(cofdpt* dpt, cofmsg_aggr_stats_reply* msg);

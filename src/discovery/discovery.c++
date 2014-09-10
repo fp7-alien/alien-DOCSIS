@@ -199,7 +199,8 @@ discovery::AGS_enable_OUI_traffic(cofdpt* dpt,uint64_t mac, uint16_t vlan){
         fe_up.match.set_eth_src(cmacaddr(mac));
         fe_up.match.set_vlan_vid(OFPVID_PRESENT|vlan);
         fe_up.instructions.next() = cofinst_apply_actions(OFP12_VERSION);
-        fe_up.instructions.back().actions.next() = cofaction_pop_vlan(OFP12_VERSION);
+        fe_up.instructions.back().actions.next() = cofaction_pop_vlan(OFP12_VERSION); //CM tag remove
+
         fe_up.instructions.back().actions.next() = cofaction_output(OFP12_VERSION,proxy->portconfig.proxy_port);
     proxy->send_flow_mod_message(dpt,fe_up); 
         
@@ -236,6 +237,9 @@ discovery::AGS_enable_OUI_traffic(cofdpt* dpt,uint64_t mac, uint16_t vlan){
         fe_data.instructions.next() = cofinst_write_metadata(OFP12_VERSION,(uint64_t)vlan,0xFFFFFFFFFFFFFFFF);
         fe_data.instructions.next() = cofinst_apply_actions(OFP12_VERSION);
         fe_data.instructions.back().actions.next() = cofaction_pop_vlan(OFP12_VERSION);
+        //for QoS VLAN tagging
+        fe_up.instructions.back().actions.next() = cofaction_pop_vlan(OFP12_VERSION);
+        ///////////////////////
         fe_data.instructions.next() = cofinst_goto_table(OFP12_VERSION,1);
         
     proxy->send_flow_mod_message(dpt,fe_data);    

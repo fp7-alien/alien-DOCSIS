@@ -190,7 +190,7 @@ void ALHINP::handle_dpath_close(cofdpt* dpt){
 
 void ALHINP::handle_ctrl_open(cofctl *ctl){
     controller=ctl;
-    std::cout<<"Controller connected\n";
+    std::cout<<"Controller connected using OF 0x0"<< ctl->get_version()<<"\n";
     fflush(stdout);
 }
 void ALHINP::handle_ctrl_close(cofctl *ctl){
@@ -322,4 +322,7 @@ void ALHINP::handle_stats_reply (cofdpt *dpt, cofmsg_stats_reply *msg){
 }
 void ALHINP::test(){
     
+}
+void ALHINP::handle_queue_get_config_request (cofctl *ctl, cofmsg_queue_get_config_request *msg){
+    //msg->g
 }
