@@ -44,6 +44,7 @@ public:
     void OUI_connected(cofdpt* dpt);
     void OUI_disconnected(cofdpt* dpt);
     void OUI_reset_flows(cofdpt* dpt);
+    void OUI_enable_qos(cofdpt* dpt);
     void AGS_connected(cofdpt* dpt);
     void AGS_disconnected(cofdpt* dpt);    
     void AGS_reset_flows(cofdpt* dpt);

@@ -23,6 +23,7 @@
 #define S_TAG 0x88A8
 
 #define takefromoutput 0xAAAAAAAA
+#define qos_default 4090
 
 
 orchestrator::orchestrator(ALHINP *ofproxy) {
@@ -45,7 +46,9 @@ orchestrator::~orchestrator() {
 void orchestrator::OUI_connected(cofdpt* dpt){
     OUI_reset_flows(dpt);
     OUI_set_port_behavior(dpt);
+    OUI_enable_qos(dpt);
 }
+
 void orchestrator::OUI_disconnected(cofdpt* dpt){ //1.0 & 1.2 compliant
     std::cout<<"[Warning] Cablemodem "<< dpt->get_dpid_s() <<"disconnected. Maybe rebooting?";
     std::map<uint32_t, cofport*>::iterator port_it;
@@ -107,7 +110,7 @@ void orchestrator::OUI_set_port_behavior(cofdpt* dpt){
                 fe_NO_PACKET_IN.set_cookie(cookiemask+1);
                 fe_NO_PACKET_IN.set_cookie_mask(cookiemask);
                 fe_NO_PACKET_IN.set_flags(0);
-                fe_NO_PACKET_IN.set_priority(1);
+                fe_NO_PACKET_IN.set_priority(0);
                 fe_NO_PACKET_IN.match.set_in_port(port_it->first);
             try{    
             proxy->send_flow_mod_message(dpt,fe_NO_PACKET_IN);
@@ -118,7 +121,34 @@ void orchestrator::OUI_set_port_behavior(cofdpt* dpt){
    //OK
 
 }
-
+void orchestrator::OUI_enable_qos(cofdpt* dpt){
+    std::map<uint32_t, cofport*>::iterator port_it;
+    std::map<uint32_t, cofport*> portlist= dpt->get_ports();
+    for (port_it = portlist.begin(); port_it != portlist.end(); ++port_it) {
+        cflowentry qos(OFP12_VERSION); 
+            qos.set_command(OFPFC_ADD);
+            qos.set_idle_timeout(0);
+            qos.set_hard_timeout(0);
+            qos.set_table_id(0);
+            qos.set_cookie(cookiemask+1);
+            qos.set_cookie_mask(cookiemask);
+            qos.set_flags(0);
+            qos.set_priority(1);
+            qos.match.set_in_port(port_it->first);       
+        if(proxy->discover->OUI_is_hidden_port(port_it->first)){ //for netport
+            qos.instructions.next() = cofinst_apply_actions(OFP12_VERSION);
+            qos.instructions.back().actions.next()=cofaction_pop_vlan(OFP12_VERSION);
+            
+            qos.instructions.next() = cofinst_goto_table(OFP12_VERSION,1);
+        }else{
+            qos.instructions.next() = cofinst_goto_table(OFP12_VERSION,1);
+        }
+        try{    
+            proxy->send_flow_mod_message(dpt,fe_NO_PACKET_IN);
+        }catch(...){}
+     
+    }
+}
 /***********************  AGREGATION SWITCH EVENTS ***********************************/
 void orchestrator::AGS_connected(cofdpt* dpt){
     
@@ -1604,7 +1634,7 @@ void      orchestrator::fill_flowpath_qos(flowpath &flows,cofmatch common_match,
             flows.flowmodlist[proxy->config.AGS_dpid]->set_table_id(1); //table AGS
             flows.flowmodlist[proxy->config.AGS_dpid]->match.set_in_port(proxy->virtualizer->get_real_port_id(inport));
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.next()=cofinst_apply_actions(OFP12_VERSION);
-            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG); 
+            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG);
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (OFPVID_PRESENT|proxy->virtualizer->get_vlan_tag(proxy->config.AGS_dpid,proxy->virtualizer->get_own_dpid(outport))));                                                         
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_output(OFP12_VERSION,proxy->portconfig.cmts_port); 
 
@@ -1633,10 +1663,13 @@ void      orchestrator::fill_flowpath_qos(flowpath &flows,cofmatch common_match,
             flows.flowmodlist[indpid]->set_table_id(0); //table CLI
             flows.flowmodlist[indpid]->match.set_in_port(proxy->virtualizer->get_real_port_id(inport));
             flows.flowmodlist[indpid]->instructions.next()=cofinst_apply_actions(OFP12_VERSION);
-            
-                flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG);
+            //signalling QoS
+            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG);
+            if(qos_id=!0)
                 flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (qos_id));
-            
+            else
+                flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (qos_default));
+            ///////////
             flows.flowmodlist[indpid]->instructions.back().actions.next()= cofaction_output(OFP12_VERSION,proxy->portconfig.oui_netport); 
 
             cflowentry* tempup2;
