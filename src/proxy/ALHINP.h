@@ -22,6 +22,7 @@
 #include "../discovery/discovery.h"
 #include "../DOCSIS/DOCSISdriver.h"
 #include "../orchestrator/Flowcache.h"
+#include "../QoS/QoS.h"
 
 #include <libconfig.h++>
 #include <iostream>
@@ -39,6 +40,7 @@ class ALHINP : public crofbase {
     friend discovery;
     friend Flowcache;
     friend translator;
+    friend QoS;
 
     
 private:
@@ -51,6 +53,7 @@ private:
     Flowcache* flowcache;
     ALHINPconfig config;
     ALHINPportconfig portconfig;
+    QoS* qosmap;
 public:
     ALHINP(char* configfile);
     ALHINP(const ALHINP& orig);
@@ -104,7 +107,7 @@ private:
 //  virtual void handle_error (cofdpt *dpt, cofmsg_error *msg);
 
   virtual void handle_queue_get_config_request (cofctl *ctl, cofmsg_queue_get_config_request *msg);    
-//  virtual void handle_queue_get_config_reply (cofdpt *dpt, cofmsg_queue_get_config_reply *msg);
+  //virtual void handle_queue_get_config_reply (cofdpt *dpt, cofmsg_queue_get_config_reply *msg);
 
 //  virtual void handle_aggregate_stats_reply(cofdpt* dpt, cofmsg_aggr_stats_reply* msg);
 //  virtual void handle_aggregate_stats_request (cofctl *ctl, cofmsg_aggr_stats_request *msg);

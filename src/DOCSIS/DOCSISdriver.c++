@@ -24,3 +24,7 @@ DOCSISdriver::enable_L2VPN(char* mac,uint16_t vlan) {
     cisco.L2VPN_enable(mac,vlan,1);
     return 1;
 }
+void
+DOCSISdriver::push_config_file(char* mac, std::vector<QueueProperties>){
+    //invoque script for pushing script to provisioning system
+}

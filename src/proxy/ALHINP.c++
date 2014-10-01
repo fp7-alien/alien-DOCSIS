@@ -33,6 +33,7 @@ ALHINP::ALHINP(char* configfile): crofbase::crofbase((uint32_t)(1 << OFP10_VERSI
     manager= new orchestrator(this);
     flowcache= new Flowcache(this);
     virtualizer = new translator (this);
+    qosmap = new QoS(this);
     
     //Listen for AGS
     std::cout << "Listening on "<< config.listening_IP_ags.c_str() <<":"<< std::dec <<(uint16_t) config.listening_ags_port<<" for AGS\n";
@@ -324,5 +325,5 @@ void ALHINP::test(){
     
 }
 void ALHINP::handle_queue_get_config_request (cofctl *ctl, cofmsg_queue_get_config_request *msg){
-    //msg->g
+   manager->handle_queue_get_config_request (ctl, msg);
 }

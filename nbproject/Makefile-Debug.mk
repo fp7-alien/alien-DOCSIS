@@ -37,6 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/src/DOCSIS/CMTS/CMTS_handler.o \
 	${OBJECTDIR}/src/DOCSIS/DOCSISdriver.o \
+	${OBJECTDIR}/src/QoS/QoS.o \
 	${OBJECTDIR}/src/discovery/discovery.o \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/orchestrator/Flowcache.o \
@@ -78,6 +79,11 @@ ${OBJECTDIR}/src/DOCSIS/DOCSISdriver.o: src/DOCSIS/DOCSISdriver.c++
 	${MKDIR} -p ${OBJECTDIR}/src/DOCSIS
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/DOCSIS/DOCSISdriver.o src/DOCSIS/DOCSISdriver.c++
+
+${OBJECTDIR}/src/QoS/QoS.o: src/QoS/QoS.c++ 
+	${MKDIR} -p ${OBJECTDIR}/src/QoS
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/QoS/QoS.o src/QoS/QoS.c++
 
 ${OBJECTDIR}/src/discovery/discovery.o: src/discovery/discovery.c++ 
 	${MKDIR} -p ${OBJECTDIR}/src/discovery

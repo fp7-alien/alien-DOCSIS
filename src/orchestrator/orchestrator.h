@@ -95,6 +95,8 @@ cofmatch process_matching(cofmatch match, uint8_t ofversion = OFP10_VERSION);
     void handle_table_stats_request(cofctl *ctl, cofmsg_table_stats_request *msg);
     //void flow_mod_generator(cofmatch ofmatch,cofinlist instrlist, flow_mod_constants *constants, uint32_t inport, uint32_t outport);
     void handle_flow_removed (cofdpt *dpt, cofmsg_flow_removed *msg);
+    
+    void handle_queue_get_config_request (cofctl *ctl, cofmsg_queue_get_config_request *msg);
 };
 
 #endif	/* ORCHESTRATOR_H */

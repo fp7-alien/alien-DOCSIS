@@ -13,6 +13,7 @@
 #define	CMTS_HANDLER_H
 
 #include <inttypes.h>
+
 class CMTS_handler {
 public:
     CMTS_handler();

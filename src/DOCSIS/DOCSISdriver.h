@@ -13,6 +13,8 @@
 #define	DOCSISDRIVER_H
 
 #include "CMTS/CMTS_handler.h"
+#include <vector>
+#include "../QoS/QoS.h"
 
 class DOCSISdriver {
     CMTS_handler cisco;
@@ -21,6 +23,7 @@ public:
     DOCSISdriver(const DOCSISdriver& orig);
     virtual ~DOCSISdriver();
     int enable_L2VPN(char* mac,uint16_t vlan);
+    void push_config_file(char* mac, std::vector<QueueProperties>);
 
 };
 

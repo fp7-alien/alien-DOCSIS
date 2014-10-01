@@ -137,7 +137,7 @@ void orchestrator::OUI_enable_qos(cofdpt* dpt){
             qos.match.set_in_port(port_it->first);       
         if(proxy->discover->OUI_is_hidden_port(port_it->first)){ //for netport
             qos.instructions.next() = cofinst_apply_actions(OFP12_VERSION);
-            qos.instructions.back().actions.next()=cofaction_pop_vlan(OFP12_VERSION);
+            qos.instructions.back().actions.next()=cofaction_pop_vlan(OFP12_VERSION); //remove QoS VLAN tag
             
             qos.instructions.next() = cofinst_goto_table(OFP12_VERSION,1);
         }else{
@@ -1634,14 +1634,19 @@ void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_m
             flows.flowmodlist[proxy->config.AGS_dpid]->match.set_in_port(proxy->virtualizer->get_real_port_id(inport));
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.next()=cofinst_apply_actions(OFP12_VERSION);
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG);
-            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (OFPVID_PRESENT|proxy->virtualizer->get_vlan_tag(proxy->config.AGS_dpid,proxy->virtualizer->get_own_dpid(outport))));                                                         
+            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,
+                                                                                                    coxmatch_ofb_vlan_vid (OFPVID_PRESENT
+                                                                                                    |proxy->virtualizer->get_vlan_tag(proxy->config.AGS_dpid,
+                                                                                                    proxy->virtualizer->get_own_dpid(outport))));  
+            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG); 
+            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (OFPVID_PRESENT|proxy->virtualizer->get_vlan_tag(proxy->config.AGS_dpid,proxy->virtualizer->get_own_dpid(outport))));              
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_output(OFP12_VERSION,proxy->portconfig.cmts_port); 
 
             std::cout<<"setting DOWNSTREAM flow CLIENT\n";
             cflowentry* temp2;
             temp2 = new cflowentry (OFP12_VERSION);
             flows.flowmodlist.insert(std::make_pair(proxy->virtualizer->get_own_dpid(outport),temp2)); //INGRESS DPID
-            flows.flowmodlist[outdpid]->set_table_id(0); //table
+            flows.flowmodlist[outdpid]->set_table_id(1); //table
             flows.flowmodlist[outdpid]->match = common_match;
             flows.flowmodlist[outdpid]->match.set_in_port(proxy->portconfig.oui_netport);
             flows.flowmodlist[outdpid]->instructions.next()=cofinst_apply_actions(OFP12_VERSION);
@@ -1659,7 +1664,7 @@ void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_m
             tempup1 = new cflowentry (OFP12_VERSION);
             flows.flowmodlist.insert(std::make_pair(proxy->virtualizer->get_own_dpid(inport),tempup1));
             flows.flowmodlist[indpid]->match = common_match;
-            flows.flowmodlist[indpid]->set_table_id(0); //table CLI
+            flows.flowmodlist[indpid]->set_table_id(1); //table CLI
             flows.flowmodlist[indpid]->match.set_in_port(proxy->virtualizer->get_real_port_id(inport));
             flows.flowmodlist[indpid]->instructions.next()=cofinst_apply_actions(OFP12_VERSION);
             //signalling QoS
@@ -2396,8 +2401,24 @@ void      orchestrator::handle_port_stats_reply (cofdpt *dpt, cofmsg_port_stats_
         //else ignore stat :)
     }
     proxy->send_port_stats_reply(proxy->controller,0x5621,templist,true);
- }
+}
 
+void      orchestrator::handle_queue_get_config_request(cofctl* ctl, cofmsg_queue_get_config_request* msg) {
+    std::vector<QueueProperties> templist=proxy->qosmap->get_queues(msg->get_port_no());
+    std::vector<QueueProperties>::iterator iter;
+    cofpacket_queue_list list(OFP12_VERSION);
+   
+    uint32_t index = 1;
+    for(iter=templist.begin();iter!=templist.end();iter++){
+        cofpacket_queue queue (OFP12_VERSION);
+        queue.get_queue_prop_list().back()=cofqueue_prop_max_rate(OFP12_VERSION,iter->max_BW);
+        queue.get_queue_prop_list().back()=cofqueue_prop_min_rate(OFP12_VERSION,iter->min_sustained_BW);
+        list.back()=queue;
+        index++;
+    }
+        proxy->send_queue_get_config_reply(proxy->controller,msg->get_xid(),msg->get_port_no(),list);
+
+}
 
 /******************************  TESTING FUNCTIONS ************************************/
 void      orchestrator::flow_test(cofdpt* dpt){

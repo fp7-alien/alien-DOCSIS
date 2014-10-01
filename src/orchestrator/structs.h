@@ -53,5 +53,7 @@ struct ALHINPportconfig {
     uint16_t    oui_userport;
 };
 
+
+
 #endif	/* STRUCTS_H */
 
