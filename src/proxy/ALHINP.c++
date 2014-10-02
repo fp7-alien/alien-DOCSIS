@@ -29,6 +29,10 @@ ALHINP::ALHINP(char* configfile): crofbase::crofbase((uint32_t)(1 << OFP10_VERSI
     if(parse_config_file(configfile)!=0){
         exit(EXIT_FAILURE);
     }
+    char qos_file [4] = "QOS";
+    if(parse_qos_file(qos_file)!=0){
+        exit(EXIT_FAILURE);
+    }
     discover= new discovery(this);
     manager= new orchestrator(this);
     flowcache= new Flowcache(this);
@@ -164,6 +168,85 @@ int ALHINP::parse_config_file(char* file){
     
     return (EXIT_SUCCESS);
 }
+
+int ALHINP::parse_qos_file(char* file) {
+    Config cfg;
+    try{
+        cfg.readFile(file);
+    }catch(const FileIOException &fioex){
+        std::cerr << "I/O error while reading QOS file." << std::endl;
+          return(EXIT_FAILURE);
+    }catch(const ParseException &pex){
+            std::cerr << "Parse error at " << pex.getFile() << ":" << pex.getLine()
+            << " - " << pex.getError() << std::endl;
+        return(EXIT_FAILURE);
+    }
+    //GET ALHINP config
+    Setting &root = cfg.getRoot();
+    try
+    {
+      const Setting &cablemodemlist = root["CMLIST"];
+      int count = cablemodemlist.getLength();
+
+      for(int i = 0; i < count; ++i)
+      {
+        const Setting &cablemodem = cablemodemlist[i];
+
+        // Only output the record if all of the expected fields are present.
+        string identifier;
+        int max_rate, min_rate;
+
+        if(!(cablemodem.lookupValue("queueID", identifier)
+             && cablemodem.lookupValue("max_rate", max_rate)
+             && cablemodem.lookupValue("min_rate", min_rate)))
+          continue;
+        //then add 
+        //TB implemented
+      }
+      cout << endl;
+    }
+    catch(const SettingNotFoundException &nfex)
+    {
+      // Ignore.
+    }
+    try
+    {
+        const Setting &cablemodemlist = root["DEFAULT_QUEUELIST"];
+        int count = cablemodemlist.getLength();
+        std::vector<QueueProperties> properties;
+
+        for(int i = 0; i < count; ++i)
+        {
+            const Setting &ALLcablemodem = cablemodemlist[i];
+
+            // Only output the record if all of the expected fields are present.
+            string identifier;
+            int max_rate, min_rate;
+
+            if(!(ALLcablemodem.lookupValue("queueID", identifier)
+                 && ALLcablemodem.lookupValue("max_rate", max_rate)
+                 && ALLcablemodem.lookupValue("min_rate", min_rate)))
+                continue;
+                QueueProperties queue;
+                queue.max_BW=max_rate;
+                queue.min_sustained_BW=min_rate;
+                if(identifier==string("openflow")){
+                    properties.front()= queue;
+                }else{
+                    properties.back()= queue;            
+                }
+
+        }
+        qosmap->add_new_qos_batch(0xFFFFFFFF,properties);
+    }
+    catch(const SettingNotFoundException &nfex)
+    {
+      // Ignore.
+    }
+    
+    return 0;
+}
+
 
 void ALHINP::handle_dpath_open(cofdpt* dpt){
     if(discover->is_aggregator(dpt->get_dpid())){

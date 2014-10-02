@@ -28,3 +28,11 @@ void
 DOCSISdriver::push_config_file(char* mac, std::vector<QueueProperties>){
     //invoque script for pushing script to provisioning system
 }
+
+void DOCSISdriver::push_default_config_file(const char* mac) {
+    //invoque script for pushing script to provisioning system with defaults
+}
+
+std::vector<QueueProperties> DOCSISdriver::get_default_queues() {
+
+}

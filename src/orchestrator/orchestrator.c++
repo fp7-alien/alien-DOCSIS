@@ -367,6 +367,10 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
                     }
                     cofaclist aclist(OFP12_VERSION);
                     aclist.next() = cofaction_output(OFP12_VERSION,proxy->portconfig.dps_port);
+                    
+                    //Load default PROFILE to the CableModem before sending the request
+                    std::vector<QueueProperties> profile = proxy->docsis.get_default_queues();
+                    proxy->docsis.push_default_config_file(mac.c_str());
                     proxy->send_packet_out_message(dpt,msg->get_buffer_id(),proxy->portconfig.cmts_port,aclist);
                     delete msg; 
                     return;            

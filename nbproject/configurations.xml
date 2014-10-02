@@ -63,6 +63,7 @@
       <itemPath>config.h.in</itemPath>
       <itemPath>configure.ac</itemPath>
     </logicalFolder>
+    <itemPath>QOS</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>src/translator</Elem>
@@ -78,6 +79,8 @@
       </toolsSet>
       <compileType>
       </compileType>
+      <item path="QOS" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/DOCSIS/CMTS/CMTS_handler.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/DOCSIS/CMTS/CMTS_handler.h" ex="false" tool="3" flavor2="0">
@@ -146,6 +149,8 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="QOS" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/DOCSIS/CMTS/CMTS_handler.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/DOCSIS/CMTS/CMTS_handler.h" ex="false" tool="3" flavor2="0">

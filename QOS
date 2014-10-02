@@ -1,0 +1,23 @@
+CMLIST = ( { mac = 00000000000000;
+             queuelist = ( { queueID = "1";
+                             max_rate = 10;
+                             min_rate = 10; },
+                           { queueID = "2";
+                             max_rate = 1;
+                             min_rate=1; } );
+           }          
+);
+
+DEFAULT_QUEUELIST = ( { queueID="1";
+                        max_rate=10;
+                        min_rate=10; },
+
+                      { queueID="2";
+                        max_rate=1;
+                        min_rate=1; },
+
+                      { queueID="OpenFlow"
+                        min_rate = 2;
+                        max_rate = 2; } );
+
+

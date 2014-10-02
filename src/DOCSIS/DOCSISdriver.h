@@ -24,7 +24,8 @@ public:
     virtual ~DOCSISdriver();
     int enable_L2VPN(char* mac,uint16_t vlan);
     void push_config_file(char* mac, std::vector<QueueProperties>);
-
+    void push_default_config_file(const char* mac);
+    std::vector<QueueProperties> get_default_queues();
 };
 
 #endif	/* DOCSISDRIVER_H */

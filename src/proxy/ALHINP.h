@@ -67,7 +67,7 @@ private:
  * @return 
  */
     int parse_config_file(char* file);
-    
+    int parse_qos_file(char* file);
     virtual void handle_timeout(int opaque);
     virtual void handle_dpath_open(cofdpt *dpt);
     virtual void handle_dpath_close(cofdpt *dpt);
