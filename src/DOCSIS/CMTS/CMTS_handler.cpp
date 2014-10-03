@@ -62,3 +62,23 @@ void CMTS_handler::L2VPN_enable(char* mac,uint16_t vlan_vid,uint8_t interface){
     //int result =system(command.c_str());
 
 }
+
+void CMTS_handler::reboot_CM(char* mac) {
+    
+    
+    std::string formated_mac;
+    formated_mac = mac;
+    std::string::iterator end_pos = std::remove(formated_mac.begin(), formated_mac.end(),':');
+    formated_mac.erase(end_pos, formated_mac.end());
+    formated_mac.insert(4,".");
+    formated_mac.insert(9,".");
+    
+    std::string command;
+    command = "tclsh reboot_CM.tcl";
+    command.append(" ");
+    command.append(formated_mac);
+    std::cout <<"Command REBOOT sent over CMTS: "<<command << "\n";
+    
+    
+    //int result =system(command.c_str());
+}

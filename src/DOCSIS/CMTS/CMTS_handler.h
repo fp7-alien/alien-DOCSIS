@@ -19,6 +19,7 @@ public:
     CMTS_handler();
     CMTS_handler(const CMTS_handler& orig);
     void L2VPN_enable(char* mac,uint16_t vlan_vid,uint8_t interface);
+    void reboot_CM(char* mac);
     virtual ~CMTS_handler();
 private:
 

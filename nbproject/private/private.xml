@@ -8,19 +8,21 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/home/victor/NetBeansProjects/ALHINP/ALHINP.cfg</file>
-            <file>file:/home/victor/NetBeansProjects/ALHINP/src/discovery/discovery.c++</file>
+            <file>file:/home/victor/NetBeansProjects/ALHINP/src/DOCSIS/CMTS/CMTS_handler.h</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/translator/translator.cpp</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/main.cpp</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/orchestrator/orchestrator.h</file>
-            <file>file:/home/victor/NetBeansProjects/ALHINP/src/orchestrator/structs.h</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/QoS/QoS.c++</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/orchestrator/orchestrator.c++</file>
-            <file>file:/home/victor/NetBeansProjects/ALHINP/src/proxy/ALHINP.h</file>
+            <file>file:/home/victor/NetBeansProjects/ALHINP/src/DOCSIS/CMTS/CMTS_handler.cpp</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/DOCSIS/DOCSISdriver.h</file>
-            <file>file:/home/victor/NetBeansProjects/ALHINP/src/translator/translator.h</file>
+            <file>file:/home/victor/NetBeansProjects/ALHINP/src/proxy/ALHINP.h</file>
+            <file>file:/home/victor/NetBeansProjects/ALHINP/src/orchestrator/Flowcache.c++</file>
+            <file>file:/home/victor/NetBeansProjects/ALHINP/src/DOCSIS/DOCSISdriver.c++</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/orchestrator/Flowcache.h</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/proxy/ALHINP.c++</file>
             <file>file:/home/victor/NetBeansProjects/ALHINP/src/QoS/QoS.h</file>
+            <file>file:/home/victor/NetBeansProjects/ALHINP/QOS</file>
         </group>
     </open-files>
 </project-private>

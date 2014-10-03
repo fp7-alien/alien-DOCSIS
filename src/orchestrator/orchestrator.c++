@@ -365,6 +365,7 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
                     }else{
                         std::cout << "CableModem RETRY with MAC: " <<mac.c_str() <<"\n";
                     }
+                    std::cout << "Trying to enforce QoS to CableModem : " <<mac.c_str() <<"\n";
                     cofaclist aclist(OFP12_VERSION);
                     aclist.next() = cofaction_output(OFP12_VERSION,proxy->portconfig.dps_port);
                     

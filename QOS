@@ -16,7 +16,7 @@ DEFAULT_QUEUELIST = ( { queueID="1";
                         max_rate=1;
                         min_rate=1; },
 
-                      { queueID="OpenFlow"
+                      { queueID="openflow"
                         min_rate = 2;
                         max_rate = 2; } );
 
