@@ -239,7 +239,7 @@ discovery::AGS_enable_OUI_traffic(cofdpt* dpt,uint64_t mac, uint16_t vlan){
         //Remove VLAN tag from cablemodem
         fe_data.instructions.back().actions.next() = cofaction_pop_vlan(OFP12_VERSION);
         //for QoS VLAN tagging
-        fe_up.instructions.back().actions.next() = cofaction_pop_vlan(OFP12_VERSION);
+        fe_data.instructions.back().actions.next() = cofaction_pop_vlan(OFP12_VERSION);
         ///////////////////////
         fe_data.instructions.next() = cofinst_goto_table(OFP12_VERSION,1);
         

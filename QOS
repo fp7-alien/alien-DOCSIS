@@ -4,20 +4,29 @@ CMLIST = ( { mac = 00000000000000;
                              min_rate = 10; },
                            { queueID = "2";
                              max_rate = 1;
-                             min_rate=1; } );
+                             min_rate = 1; } );
            }          
 );
 
-DEFAULT_QUEUELIST = ( { queueID="1";
-                        max_rate=10;
-                        min_rate=10; },
+DEFAULT_QUEUELIST = ( { queueID   = "10Mb queue";
+                        max_rate  = 10;
+                        min_rate  = 10;
+                        direction = "bidirectional";
+                        source_port = 0xffffffff
+                        destination_port = 12 },
 
-                      { queueID="2";
-                        max_rate=1;
-                        min_rate=1; },
+                      { queueID  = "1Mb Queue";
+                        max_rate = 1;
+                        min_rate = 1;
+                        direction   = "bidirectional";
+                        source_port = 0xffffffff
+                        destination_port = 12 },
 
-                      { queueID="openflow"
+                      { queueID = "openflow";
                         min_rate = 2;
-                        max_rate = 2; } );
+                        max_rate = 2; 
+                        direction   = "bidirectional";
+                        source_port = 0
+                        destination_port = 0 } );
 
 

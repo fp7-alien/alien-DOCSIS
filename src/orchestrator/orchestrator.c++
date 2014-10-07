@@ -46,7 +46,7 @@ orchestrator::~orchestrator() {
 void orchestrator::OUI_connected(cofdpt* dpt){
     OUI_reset_flows(dpt);
     OUI_set_port_behavior(dpt);
-    OUI_enable_qos(dpt);
+    //OUI_enable_qos(dpt);
 }
 
 void orchestrator::OUI_disconnected(cofdpt* dpt){ //1.0 & 1.2 compliant
@@ -89,7 +89,7 @@ void orchestrator::OUI_reset_flows(cofdpt* dpt){
         fe_NO_PACKET_IN.set_cookie_mask(cookiemask);
         fe_NO_PACKET_IN.set_flags(0);
         fe_NO_PACKET_IN.set_priority(1);
-        fe_NO_PACKET_IN.match.set_in_port(proxy->portconfig.oui_netport);
+        //fe_NO_PACKET_IN.match.set_in_port(proxy->portconfig.oui_netport);
         try{
             proxy->send_flow_mod_message(dpt,fe_NO_PACKET_IN);
         }catch(...){
@@ -99,22 +99,53 @@ void orchestrator::OUI_reset_flows(cofdpt* dpt){
 void orchestrator::OUI_set_port_behavior(cofdpt* dpt){
     std::map<uint32_t, cofport*>::iterator port_it;
     std::map<uint32_t, cofport*> portlist= dpt->get_ports();
+    
+    cflowentry fe_NO_PACKET_IN(OFP12_VERSION); 
+    fe_NO_PACKET_IN.set_command(OFPFC_ADD);
+    fe_NO_PACKET_IN.set_idle_timeout(0);
+    fe_NO_PACKET_IN.set_hard_timeout(0);
+    fe_NO_PACKET_IN.set_table_id(1);
+    fe_NO_PACKET_IN.set_cookie(cookiemask+1);
+    fe_NO_PACKET_IN.set_cookie_mask(cookiemask);
+    fe_NO_PACKET_IN.set_flags(0);
+    fe_NO_PACKET_IN.set_priority(1);
+    fe_NO_PACKET_IN.match.set_in_port(proxy->portconfig.oui_netport);
+    proxy->send_flow_mod_message(dpt,fe_NO_PACKET_IN);
+    
     for (port_it = portlist.begin(); port_it != portlist.end(); ++port_it) {
         
         if(proxy->discover->OUI_is_hidden_port(port_it->first)){
-            cflowentry fe_NO_PACKET_IN(OFP12_VERSION); 
-                fe_NO_PACKET_IN.set_command(OFPFC_ADD);
-                fe_NO_PACKET_IN.set_idle_timeout(0);
-                fe_NO_PACKET_IN.set_hard_timeout(0);
-                fe_NO_PACKET_IN.set_table_id(0);
-                fe_NO_PACKET_IN.set_cookie(cookiemask+1);
-                fe_NO_PACKET_IN.set_cookie_mask(cookiemask);
-                fe_NO_PACKET_IN.set_flags(0);
-                fe_NO_PACKET_IN.set_priority(0);
-                fe_NO_PACKET_IN.match.set_in_port(port_it->first);
+            cflowentry rem_vlan_and_goto_table(OFP12_VERSION); 
+                rem_vlan_and_goto_table.set_command(OFPFC_ADD);
+                rem_vlan_and_goto_table.set_idle_timeout(0);
+                rem_vlan_and_goto_table.set_hard_timeout(0);
+                rem_vlan_and_goto_table.set_table_id(0);
+                rem_vlan_and_goto_table.set_cookie(cookiemask+1);
+                rem_vlan_and_goto_table.set_cookie_mask(cookiemask);
+                rem_vlan_and_goto_table.set_flags(0);
+                rem_vlan_and_goto_table.set_priority(1);
+                rem_vlan_and_goto_table.match.set_in_port(port_it->first);
+                rem_vlan_and_goto_table.instructions.next() = cofinst_apply_actions(OFP12_VERSION);
+                rem_vlan_and_goto_table.instructions.back().actions.next()=cofaction_pop_vlan(OFP12_VERSION); //remove QoS VLAN tag
+                rem_vlan_and_goto_table.instructions.next() = cofinst_goto_table(OFP12_VERSION,1);
             try{    
-            proxy->send_flow_mod_message(dpt,fe_NO_PACKET_IN);
+                proxy->send_flow_mod_message(dpt,rem_vlan_and_goto_table);
             }catch(...){}
+        }else{
+            cflowentry fe_DATA_INPORT(OFP12_VERSION); 
+                fe_DATA_INPORT.set_command(OFPFC_ADD);
+                fe_DATA_INPORT.set_idle_timeout(0);
+                fe_DATA_INPORT.set_hard_timeout(0);
+                fe_DATA_INPORT.set_table_id(0);
+                fe_DATA_INPORT.set_cookie(cookiemask+1);
+                fe_DATA_INPORT.set_cookie_mask(cookiemask);
+                fe_DATA_INPORT.set_flags(0);
+                fe_DATA_INPORT.set_priority(1);
+                fe_DATA_INPORT.match.set_in_port(port_it->first);
+                fe_DATA_INPORT.instructions.next()=cofinst_goto_table(OFP12_VERSION,1);
+            try{    
+                proxy->send_flow_mod_message(dpt,fe_DATA_INPORT);
+            }catch(...){}            
         }
      
     }
@@ -144,7 +175,7 @@ void orchestrator::OUI_enable_qos(cofdpt* dpt){
             qos.instructions.next() = cofinst_goto_table(OFP12_VERSION,1);
         }
         try{    
-            //proxy->send_flow_mod_message(dpt,fe_NO_PACKET_IN);
+            proxy->send_flow_mod_message(dpt,qos);
         }catch(...){}
      
     }
@@ -225,7 +256,6 @@ void orchestrator::CTRL_disconnected(){
 
 /********************************  PACKET_IN *****************************************/
 void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
-    //std::cout<<"PACKET_IN RECEIVED!\n";
     if(msg->get_reason()==OFPR_NO_MATCH){
         if(proxy->discover->is_hidden_port(dpt->get_dpid(),msg->get_match().get_in_port())){
             std::cout<<"Discarding Packet_IN\n";
@@ -233,7 +263,8 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
             return;
         }else{ //not hidden!
             uint32_t translated_port;
-            if(proxy->controller->get_version()==OFP10_VERSION){
+            if(proxy->config.of_version=="1.0"){
+                //1.0 version
                 translated_port=(uint16_t)proxy->virtualizer->get_virtual_port_id(dpt->get_dpid(),msg->get_match().get_in_port());
                 cofmatch match(OFP10_VERSION);
                 match = msg->get_match();
@@ -256,6 +287,7 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
                        std::cout<<"WARNING: No Controller connected (discarding PACKEt_IN message)\n";
                 }
             }else{
+                //1.2 section
                 translated_port=proxy->virtualizer->get_virtual_port_id(dpt->get_dpid(),msg->get_match().get_in_port());
                 cofmatch match(OFP12_VERSION);
                 match = msg->get_match();
@@ -275,8 +307,6 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
                        std::cout<<"WARNING: No Controller connected (discarding PACKEt_IN message)\n";
                 }                
             }
-            delete msg;
-            return;
         }
     }else if(msg->get_reason()==OFPR_ACTION){
         
@@ -370,8 +400,10 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
                     aclist.next() = cofaction_output(OFP12_VERSION,proxy->portconfig.dps_port);
                     
                     //Load default PROFILE to the CableModem before sending the request
-                    std::vector<QueueProperties> profile = proxy->docsis.get_default_queues();
-                    proxy->docsis.push_default_config_file(mac.c_str());
+                    std::vector<QueueList> profile = proxy->qosmap->get_default_queues();
+                    //set IDENTIFIERS AND VLAN_ID for each QUEUE
+                    proxy->qosmap->allocate_identifiers(profile,vlan);
+                    proxy->docsis.push_config_file(mac.c_str(),profile);
                     proxy->send_packet_out_message(dpt,msg->get_buffer_id(),proxy->portconfig.cmts_port,aclist);
                     delete msg; 
                     return;            
@@ -412,7 +444,7 @@ void      orchestrator::dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg){
 //            }
 //            packoutcache.erase(msg->get_buffer_id());
 //            fflush(stdout);
-            
+            std::cout<<"PACKET_IN 6\n";
             delete msg; 
             return;
 
@@ -719,6 +751,7 @@ void      orchestrator::process_packet_out(uint32_t inport,cofaclist list, uint8
     
     
 }
+
 void      orchestrator::process_output_actions(flowpath &flows,cofaclist aclist, uint8_t ofversion, uint32_t inport, uint8_t nw_proto,uint8_t *data,size_t datalen){
     flowpath flowlist;
     flowlist.longest=0;
@@ -2409,8 +2442,8 @@ void      orchestrator::handle_port_stats_reply (cofdpt *dpt, cofmsg_port_stats_
 }
 
 void      orchestrator::handle_queue_get_config_request(cofctl* ctl, cofmsg_queue_get_config_request* msg) {
-    std::vector<QueueProperties> templist=proxy->qosmap->get_queues(msg->get_port_no());
-    std::vector<QueueProperties>::iterator iter;
+    std::vector<QueueList> templist=proxy->qosmap->get_queues(msg->get_port_no());
+    std::vector<QueueList>::iterator iter;
     cofpacket_queue_list list(OFP12_VERSION);
    
     uint32_t index = 1;

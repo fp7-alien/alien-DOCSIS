@@ -29,7 +29,7 @@ ALHINP::ALHINP(char* configfile): crofbase::crofbase((uint32_t)(1 << OFP10_VERSI
     if(parse_config_file(configfile)!=0){
         exit(EXIT_FAILURE);
     }
-
+   
     
     discover= new discovery(this);
     manager= new orchestrator(this);
@@ -153,6 +153,7 @@ int ALHINP::parse_config_file(char* file){
     portconfig.oui_netport=(uint16_t)ouinetport;
     portconfig.oui_userport=(uint16_t)ouiuserport;
     portconfig.proxy_port=(uint16_t)proxyport;
+    config.queue_counter=2;
     
     string AGS_dpidtemp;
     
@@ -215,10 +216,12 @@ int ALHINP::parse_qos_file(char* file) {
       // Ignore.
     }
     
-    string identifier;
-    uint32_t max_rate, min_rate;
-    QueueProperties queue;
-    std::vector<QueueProperties> properties;
+    string identifier,direction;
+    uint32_t max_rate, min_rate, source_port, dest_port;
+    QueueList queue;
+    std::vector<QueueList> Queues;
+    int queuecounter =2;
+    bool openflow_present = false;
     try
     {
         const Setting &cablemodemlist = root["DEFAULT_QUEUELIST"];
@@ -234,15 +237,29 @@ int ALHINP::parse_qos_file(char* file) {
                     
             if(!(ALLcablemodem.lookupValue("queueID", identifier)
                  && ALLcablemodem.lookupValue("max_rate", max_rate)
+                 && ALLcablemodem.lookupValue("destination_port", dest_port)
+                 && ALLcablemodem.lookupValue("source_port", source_port)
+                 && ALLcablemodem.lookupValue("direction", direction)
                  && ALLcablemodem.lookupValue("min_rate", min_rate)))
                 continue;
                 
-                queue.max_BW=max_rate;
-                queue.min_sustained_BW=min_rate;
+                queue.max_BW            = max_rate;
+                queue.min_sustained_BW  = min_rate;
+                queue.description       = identifier;
+                queue.src_port          = source_port;
+                queue.dst_port          = dest_port;
+                queue.direction         = direction;
                 if(identifier=="openflow"){
-                    properties. = queue;
+                    queue.vlanID            = 0     ;
+                    queue.dst_port          = 0     ;
+                    queue.direction         = "none";
+                    Queues.push_back(queue); 
+                    openflow_present =true;
+                    
                 }else{
-                    properties.push_back(queue);            
+                    //queue.vlanID = queuecounter;
+                    //queuecounter++;
+                    Queues.push_back(queue);            
                 }
         }
 
@@ -251,16 +268,14 @@ int ALHINP::parse_qos_file(char* file) {
     {
       // Ignore.
     }
-    qosmap->add_new_qos_batch(0xFFFFFFFF,properties);
-    std::vector<QueueProperties> queueloaded = qosmap->get_queues(0xFFFFFFFF);
-    std::cout<<"CHECKPOINT\n";
-    std::vector<QueueProperties>::iterator it;
-    int i=1;
-    for(it=queueloaded.begin();it!=queueloaded.end();it++,i++){
-        std::cout<<"Queue "<< i << "maxBW "<<it->max_BW <<"minBW "<< it->min_sustained_BW << "\n"; 
+    if(openflow_present==false)
+        return(EXIT_FAILURE);
+    else{
+        qosmap->add_new_qos_batch(0xFFFFFFFF,Queues);
+        std::cout << "QoS file successfully parsed\n";
+        return 0;
     }
-    std::cout << "QoS file parsed\n";
-    return 0;
+
 }
 
 

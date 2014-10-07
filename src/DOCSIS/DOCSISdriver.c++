@@ -25,7 +25,13 @@ DOCSISdriver::enable_L2VPN(char* mac,uint16_t vlan) {
     return 1;
 }
 void
-DOCSISdriver::push_config_file(char* mac, std::vector<QueueProperties>){
+DOCSISdriver::push_config_file(const char* mac, std::vector<QueueList> queues){
+    //generating 
+    std::vector<QueueList>::iterator it;
+    for(it = queues.begin();it !=queues.end();it++){
+        create_SF(it->vlanID,it->direction);
+    }
+            
     //invoque script for pushing script to provisioning system
 }
 
@@ -33,6 +39,6 @@ void DOCSISdriver::push_default_config_file(const char* mac) {
     //invoque script for pushing script to provisioning system with defaults
 }
 
-std::vector<QueueProperties> DOCSISdriver::get_default_queues() {
+void DOCSISdriver::create_SF(uint16_t vlan_vid, std::string direction) {
 
 }

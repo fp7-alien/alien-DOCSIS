@@ -41,6 +41,8 @@ struct ALHINPconfig {
     uint64_t    AGS_dpid;
     uint64_t    ALHINP_dpid;
     
+    uint16_t    queue_counter;
+    
 };
 
 struct ALHINPportconfig {
@@ -51,6 +53,8 @@ struct ALHINPportconfig {
     
     uint16_t    oui_netport;
     uint16_t    oui_userport;
+    
+
 };
 
 
