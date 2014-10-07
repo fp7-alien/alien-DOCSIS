@@ -40,6 +40,8 @@ public:
     std::vector<QueueList> get_queues(uint32_t port_id);
     std::vector<QueueList> get_default_queues();
     void allocate_identifiers (std::vector<QueueList> &queues,uint16_t vid);
+    void check_queues(uint32_t port);
+    void enable_queues_for_port(uint32_t port_id);
     
 private:
     ALHINP *proxy;

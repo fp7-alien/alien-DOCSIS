@@ -37,8 +37,9 @@ void QoS::add_new_qos_batch(uint32_t port_id, std::vector<QueueList> queuelist) 
     std::map< uint32_t , std::vector<QueueList> >::iterator qos_iter;
     std::vector<QueueList>::iterator prop_iter;
     qos_iter = QoSMap.find(port_id);
+    std::cout <<"For port: "<< port_id <<" ";
     for(prop_iter= qos_iter->second.begin();prop_iter != qos_iter->second.end();prop_iter++){
-        std::cout << "Queue added: " <<  std::dec << prop_iter->description <<" min_BW: " << prop_iter->min_sustained_BW << " max_BW:" << prop_iter->max_BW << "\n";
+        std::cout << "queue added: " <<  std::dec << prop_iter->description <<" min_BW: " << prop_iter->min_sustained_BW << " max_BW:" << prop_iter->max_BW << "\n";
     }
 }
 
@@ -69,16 +70,46 @@ std::vector<QueueList> QoS::get_default_queues() {
 }
 
 void QoS::allocate_identifiers(std::vector<QueueList> &queues, uint16_t vid) {
-    int counter = 2;
+    if(vid!=0){
+        int counter = 1;
+        std::vector<QueueList>::iterator queue_iter;
+        for(queue_iter= queues.begin();queue_iter != queues.end();queue_iter++){
+             if(queue_iter->description=="openflow"){
+                 queue_iter->vlanID = 0;
+
+            }else{
+                queue_iter->vlanID = vid*10+counter;
+                counter++;
+        }
+
+    }
+    QoSMap [(uint32_t)(vid*10)] = queues;
+    check_queues((uint32_t)(vid*10));
+    }
+
+    return;
+}
+void QoS::check_queues(uint32_t port){
+    std::map< uint32_t , std::vector<QueueList> >::iterator qos_iter;
+    std::vector<QueueList>::iterator prop_iter;
+    qos_iter = QoSMap.find(port);
+    std::cout <<"For port: "<< port <<"\n";
+    for(prop_iter= qos_iter->second.begin();prop_iter != qos_iter->second.end();prop_iter++){
+        std::cout << " queue added: " <<  std::dec << prop_iter->description <<" min_BW: " << prop_iter->min_sustained_BW << " max_BW:" << prop_iter->max_BW << "\n";
+    }
+}
+
+void QoS::enable_queues_for_port(uint32_t port_id){
+    uint32_t vlan;
+    vlan = (uint32_t) port_id/10;
+    std::cout<<"enabling queues for port "<< port_id <<"\n";
+    std::vector<QueueList> templist;
     std::vector<QueueList>::iterator queue_iter;
-   for(queue_iter= queues.begin();queue_iter != queues.end();queue_iter++){
-       if(queue_iter->description=="openflow"){
-            queue_iter->vlanID = 0;
-
-       }else{
-            queue_iter->vlanID = vid*10+counter;
-            counter++;
-       }
-
-   }
+    for (queue_iter=QoSMap [port_id].begin();queue_iter!=QoSMap [port_id].end();queue_iter++){
+        if(queue_iter->description!="openflow"){
+            templist.push_back((*queue_iter));
+        }
+    }
+    QoSMap [ port_id] = templist;
+    check_queues(port_id);
 }
