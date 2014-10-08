@@ -15,7 +15,7 @@ DEFAULT_QUEUELIST = ( { queueID   = "10Mb queue";
                         source_port = 0xffffffff
                         destination_port = 12 },
 
-                      { queueID  = "1Mb Queue";
+                      { queueID  = "default";
                         max_rate = 1;
                         min_rate = 1;
                         direction   = "bidirectional";

@@ -222,6 +222,7 @@ int ALHINP::parse_qos_file(char* file) {
     std::vector<QueueList> Queues;
     int queuecounter =2;
     bool openflow_present = false;
+    bool default_present = false;
     try
     {
         const Setting &cablemodemlist = root["DEFAULT_QUEUELIST"];
@@ -254,11 +255,11 @@ int ALHINP::parse_qos_file(char* file) {
                     queue.dst_port          = 0     ;
                     queue.direction         = "none";
                     Queues.push_back(queue); 
-                    openflow_present =true;
+                    openflow_present = true;
                     
                 }else{
-                    //queue.vlanID = queuecounter;
-                    //queuecounter++;
+                    if(identifier=="default")
+                        default_present = true;
                     Queues.push_back(queue);            
                 }
         }
@@ -268,7 +269,7 @@ int ALHINP::parse_qos_file(char* file) {
     {
       // Ignore.
     }
-    if(openflow_present==false)
+    if(openflow_present==false || default_present == false)
         return(EXIT_FAILURE);
     else{
         qosmap->add_new_qos_batch(0xFFFFFFFF,Queues);
@@ -286,8 +287,11 @@ void ALHINP::handle_dpath_open(cofdpt* dpt){
         manager->OUI_connected(dpt);
         //This not should be like this, the controller should verify that ports for Flow Mods exist
         std::cout<<"Trying to connect controller @ "<< config.controller_ip.c_str() << "\n";
-        rpc_connect_to_ctl(OFP10_VERSION,5,caddress(AF_INET,config.controller_ip.c_str(),config.controller_port));
-        
+        if(config.of_version=="1.0"){
+            rpc_connect_to_ctl(OFP10_VERSION,5,caddress(AF_INET,config.controller_ip.c_str(),config.controller_port));
+        }else{
+            rpc_connect_to_ctl(OFP12_VERSION,5,caddress(AF_INET,config.controller_ip.c_str(),config.controller_port));
+        }
     }
 
 }
@@ -305,7 +309,7 @@ void ALHINP::handle_dpath_close(cofdpt* dpt){
 
 void ALHINP::handle_ctrl_open(cofctl *ctl){
     controller=ctl;
-    std::cout<<"Controller connected using OF 0x0"<< ctl->get_version()<<"\n";
+    std::cout<<"Controller connected using OF 0x0"<< int(ctl->get_version())<<"\n";
     fflush(stdout);
 }
 void ALHINP::handle_ctrl_close(cofctl *ctl){
