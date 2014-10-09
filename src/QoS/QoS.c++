@@ -122,7 +122,7 @@ void QoS::enable_queues_for_port(uint32_t port_id){
             QueueList queue1;
             queue1.description = (*queue_iter).description;
             queue1.direction = "upstream";
-            queue1.dst_port = (uint32_t) proxy->portconfig.data_port;
+            queue1.dst_port = proxy->virtualizer->get_virtual_port_id(proxy->config.AGS_dpid,proxy->portconfig.data_port);
             queue1.max_BW = (*queue_iter).max_BW;
             queue1.min_sustained_BW = (*queue_iter).min_sustained_BW;
             queue1.src_port = port_id;

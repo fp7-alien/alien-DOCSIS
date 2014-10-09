@@ -1056,11 +1056,11 @@ void      orchestrator::flow_mod_add(cofctl *ctl, cofmsg_flow_mod *msg){
     }else{
         common_match=msg->get_match();
     }
-    //std::cout<<"Exiting... "<< common_match.c_str()<<"\n";
+    std::cout<<"Exiting... "<< common_match.c_str()<<"\n";
     
     flowpath flows;
     flows.longest=0;
-    //std::cout<<"Entering to processing action list... \n";
+    std::cout<<"Entering to processing action list... \n";
     
     //proccessing 1.0 version
     if(ofversion==OFP10_VERSION){
@@ -1074,6 +1074,7 @@ void      orchestrator::flow_mod_add(cofctl *ctl, cofmsg_flow_mod *msg){
         }catch(...){}
         process_action_list_10(flows,common_match, aclist, OFP10_VERSION, virtual_inport,proto,OFPT10_FLOW_MOD); //FOR OF 1.0
     }else{
+        
         cofinlist inlist (OFP12_VERSION);
         uint8_t proto=0;
         try{
@@ -1405,9 +1406,9 @@ bool      orchestrator::process_action_list_12(flowpath &flows,cofmatch common_m
     cofaclist::iterator it2;
     bool anyoutput=false;
     uint8_t flowtype;
-    uint8_t qos_id=0;
+    uint32_t qos_id=0;
     if (ofversion==OFP12_VERSION){   
-        instrlist.next()=cofinst_apply_actions(OFP12_VERSION);
+        //instrlist.next()=cofinst_apply_actions(OFP12_VERSION);
         for (it = inlist.begin(); it != inlist.end(); ++it){
             switch(it->get_type()){
                 case OFPIT_APPLY_ACTIONS:
@@ -1430,20 +1431,26 @@ bool      orchestrator::process_action_list_12(flowpath &flows,cofmatch common_m
                             std::cout<<"Flowtype "<< (int)flowtype<<" processing...\n";
                             fill_flowpath_with_qos(flowlist,common_match,instrlist.back().actions, inport,htobe32((*it2).oac_oacu.oacu_12output->port),flowtype,qos_id);
                             instrlist.back().actions.clear();
+                            break;
                         }
                         case OFP12AT_SET_FIELD:{
                             instrlist.back().actions.next()=(*it2);
+                            break;
                         }
                         case OFP12AT_SET_QUEUE:{
                             //QOS :) // implementing :
+
                             qos_id=htobe32((*it2).oac_oacu.oacu_12set_queue->queue_id);
                             std::cout<<"Service Flow selected: "<< qos_id <<"\n";
+                            break;
                         }
                         case OFP12AT_PUSH_VLAN:{
                             instrlist.back().actions.next() = cofaction_push_vlan(OFP12_VERSION,C_TAG); 
+                            break;
                         }
                         case OFP12AT_POP_VLAN:{
                             instrlist.back().actions.next() = cofaction_pop_vlan(OFP12_VERSION);
+                            break;
                         }
                         default:{
                             //unsupported
@@ -1573,8 +1580,8 @@ bool      orchestrator::process_action_list_10(flowpath &flows,cofmatch common_m
     return true;
 }
 
-void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_match,cofaclist aclist,uint32_t inport, uint32_t outport, uint8_t flowtype, uint8_t qos_id){
- std::cout<<"debugging actions entering at fill flowpath QOS "<<aclist.c_str()<<"\n";
+void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_match,cofaclist aclist,uint32_t inport, uint32_t outport, uint8_t flowtype, uint32_t qos_id){
+    std::cout<<"debugging actions entering at fill flowpath QOS "<<aclist.c_str()<<"\n";
     switch(flowtype){ //CHANGED
         case WCtoALL:{
             //not implemented yet
@@ -1675,10 +1682,15 @@ void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_m
             uint64_t indpid = proxy->virtualizer->get_own_dpid(inport);
             uint64_t outdpid = proxy->virtualizer->get_own_dpid(outport); 
             uint16_t qos_vlan;
-            if(proxy->qosmap->qos_id_is_valid(qos_id,inport,outport))
-                qos_vlan = qos_id;
-            else
-                qos_vlan = proxy->qosmap->get_default_queue_vlan(inport,outport);
+            if(proxy->qosmap->qos_id_is_valid(qos_id,inport,outport)){
+                qos_vlan = (uint16_t)qos_id;
+                std::cout<<"valid"<< (uint16_t)qos_vlan <<"\n";
+                
+            }else{
+                qos_vlan = proxy->qosmap->get_default_queue_vlan(inport,outport); 
+                std::cout<<"not valid"<< (uint16_t)qos_vlan <<"\n";
+            }
+
             cflowentry* temp1; //for AGS
             temp1= new cflowentry (OFP12_VERSION);
             flows.flowmodlist.insert(std::make_pair(proxy->config.AGS_dpid,temp1)); //INGRESS DPID
@@ -1687,11 +1699,10 @@ void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_m
             flows.flowmodlist[proxy->config.AGS_dpid]->match.set_in_port(proxy->virtualizer->get_real_port_id(inport));
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.next()=cofinst_apply_actions(OFP12_VERSION);
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG);
-            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,
-                                                                                                    coxmatch_ofb_vlan_vid (OFPVID_PRESENT
-                                                                                                    |qos_vlan));  
+            std::cout<<"writing VLAN for QoS: "<< qos_vlan<<"\n";
+            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (qos_vlan));  
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG); 
-            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (OFPVID_PRESENT|proxy->virtualizer->get_vlan_tag(proxy->config.AGS_dpid,proxy->virtualizer->get_own_dpid(outport))));              
+            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (proxy->virtualizer->get_vlan_tag(proxy->config.AGS_dpid,proxy->virtualizer->get_own_dpid(outport))));              
             flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_output(OFP12_VERSION,proxy->portconfig.cmts_port); 
 
             std::cout<<"setting DOWNSTREAM flow CLIENT\n";
@@ -1713,7 +1724,7 @@ void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_m
             uint64_t outdpid = proxy->virtualizer->get_own_dpid(outport);
             uint16_t qos_vlan;
             if(proxy->qosmap->qos_id_is_valid(qos_id,inport,outport))
-                qos_vlan = qos_id;
+                qos_vlan = (uint16_t)qos_id;
             else
                 qos_vlan = proxy->qosmap->get_default_queue_vlan(inport,outport);
             
@@ -1727,9 +1738,10 @@ void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_m
             flows.flowmodlist[indpid]->match.set_in_port(proxy->virtualizer->get_real_port_id(inport));
             flows.flowmodlist[indpid]->instructions.next()=cofinst_apply_actions(OFP12_VERSION);
             //signalling QoS
-            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG);
-            flows.flowmodlist[proxy->config.AGS_dpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (qos_vlan));
 
+            flows.flowmodlist[indpid]->instructions.back().actions.next()= cofaction_push_vlan(OFP12_VERSION,C_TAG);
+            std::cout<<"writing VLAN for QoS: "<< qos_vlan<<"\n";
+            flows.flowmodlist[indpid]->instructions.back().actions.next()= cofaction_set_field(OFP12_VERSION,coxmatch_ofb_vlan_vid (qos_vlan));
             ///////////
             flows.flowmodlist[indpid]->instructions.back().actions.next()= cofaction_output(OFP12_VERSION,proxy->portconfig.oui_netport); 
 
@@ -1741,10 +1753,13 @@ void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_m
             flows.flowmodlist[outdpid]->set_table_id(1); //AGS table
             flows.flowmodlist[outdpid]->match.set_in_port(proxy->portconfig.cmts_port);
             flows.flowmodlist[outdpid]->match.set_metadata((uint64_t)proxy->virtualizer->get_vlan_tag(indpid,outdpid));
-            flows.flowmodlist[outdpid]->instructions.back().actions=aclist;              
+
+            flows.flowmodlist[outdpid]->instructions.back().actions=aclist;  
+         
             flows.flowmodlist[outdpid]->instructions.back().actions.next()= cofaction_output(OFP12_VERSION,proxy->virtualizer->get_real_port_id(outport));                    
             flows.whereask=indpid;
             flows.longest=2;
+
             break;            
 
         }
@@ -2410,12 +2425,26 @@ void      orchestrator::handle_flow_stats_reply (cofdpt *dpt, cofmsg_flow_stats_
 void      orchestrator::handle_table_stats_request (cofctl *ctl, cofmsg_table_stats_request *msg){
     //ignore
     if (ctl->get_version()==OFP12_VERSION){
-        //proxy->send_table_stats_reply(proxy->controller,msg->get_xid(),)
-        return;
+        std::vector<coftable_stats_reply> table_stats;
+        
+        coftable_stats_reply stat (OFP12_VERSION);
+        stat.set_apply_actions(0);
+        stat.set_instructions(0);
+        stat.set_match(0);
+        stat.set_metadata_match(0);
+        stat.set_table_id(0);
+        stat.set_write_actions(0);
+        table_stats.push_back(stat);
+        proxy->send_table_stats_reply(proxy->controller,msg->get_xid(),table_stats);
+
+    }else{
+        proxy->send_error_message(proxy->controller,msg->get_xid(),OFPET_BAD_REQUEST,OFPBRC_BAD_STAT,msg->soframe(),msg->framelen());  
+
     }
-    proxy->send_error_message(proxy->controller,msg->get_xid(),OFPET_BAD_REQUEST,OFPBRC_BAD_STAT,msg->soframe(),msg->framelen());
     delete msg;
     return;
+
+
 } //IGNORING
 void      orchestrator::handle_port_stats_request (cofctl *ctl, cofmsg_port_stats_request *msg){
     try{

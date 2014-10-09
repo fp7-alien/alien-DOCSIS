@@ -74,7 +74,7 @@ cofmatch process_matching(cofmatch match, uint8_t ofversion = OFP10_VERSION);
     void process_output_actions(flowpath &flows,cofaclist aclist, uint8_t ofversion, uint32_t inport, uint8_t nw_proto,uint8_t *data,size_t datalen);
     bool process_action_list_12(flowpath &flows,cofmatch common_match,cofinlist inlist, uint8_t ofversion, uint32_t inport, uint8_t nw_proto, uint8_t message);
     bool process_action_list_10(flowpath &flows,cofmatch common_match,cofaclist aclist, uint8_t ofversion, uint32_t inport, uint8_t nw_proto, uint8_t message);
-    void fill_flowpath_with_qos(flowpath &flows,cofmatch common_match, cofaclist aclist,uint32_t inport,uint32_t outport, uint8_t flowtype, uint8_t qos_id);
+    void fill_flowpath_with_qos(flowpath &flows,cofmatch common_match, cofaclist aclist,uint32_t inport,uint32_t outport, uint8_t flowtype, uint32_t qos_id);
     void fill_flowpath_from_10(flowpath &flows,cofmatch common_match, cofaclist aclist,uint32_t inport,uint32_t outport, uint8_t flowtype);
     
     void dispath_PACKET_IN(cofdpt *dpt, cofmsg_packet_in *msg); 
