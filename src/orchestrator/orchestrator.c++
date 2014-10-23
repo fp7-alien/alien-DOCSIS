@@ -1752,8 +1752,8 @@ void      orchestrator::fill_flowpath_with_qos(flowpath &flows,cofmatch common_m
             flows.flowmodlist[outdpid]->match = common_match;
             flows.flowmodlist[outdpid]->set_table_id(1); //AGS table
             flows.flowmodlist[outdpid]->match.set_in_port(proxy->portconfig.cmts_port);
-            flows.flowmodlist[outdpid]->match.set_metadata((uint64_t)proxy->virtualizer->get_vlan_tag(indpid,outdpid));
-
+            //flows.flowmodlist[outdpid]->match.set_metadata((uint64_t)proxy->virtualizer->get_vlan_tag(indpid,outdpid));   0.4VERSION
+            flows.flowmodlist[outdpid]->match.set_metadata(0x0200000000000000);                                           //0.5VERSION
             flows.flowmodlist[outdpid]->instructions.back().actions=aclist;  
          
             flows.flowmodlist[outdpid]->instructions.back().actions.next()= cofaction_output(OFP12_VERSION,proxy->virtualizer->get_real_port_id(outport));                    
@@ -2512,6 +2512,7 @@ void      orchestrator::handle_queue_get_config_request(cofctl* ctl, cofmsg_queu
         //std::cout << "Max BW: "<< iter->max_BW <<"\n";
         queue.get_queue_prop_list().next()=cofqueue_prop_min_rate(OFP12_VERSION,iter->min_sustained_BW);
         //std::cout << "Min BW: "<< iter->min_sustained_BW <<"\n";
+        queue.get_queue_prop_list().next() = cofqueue_prop_src_port(OFP12_VERSION,iter->dst_port); /// ojo con los puertos
         list.next()=queue;
         //proxy->send_queue_get_config_reply(proxy->controller,msg->get_xid(),msg->get_port_no(),list);
     }

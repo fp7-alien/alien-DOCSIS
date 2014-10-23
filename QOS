@@ -9,15 +9,15 @@ CMLIST = ( { mac = 00000000000000;
 );
 
 DEFAULT_QUEUELIST = ( { queueID   = "10Mb queue";
-                        max_rate  = 10;
-                        min_rate  = 10;
+                        max_rate  = 10000;
+                        min_rate  = 10000;
                         direction = "bidirectional";
                         source_port = 0xffffffff
                         destination_port = 12 },
 
                       { queueID  = "default";
-                        max_rate = 1;
-                        min_rate = 1;
+                        max_rate = 1000;
+                        min_rate = 1000;
                         direction   = "bidirectional";
                         source_port = 0xffffffff
                         destination_port = 12 },

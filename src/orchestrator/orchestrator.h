@@ -15,6 +15,7 @@
 #include <rofl/common/openflow/cofdpt.h>
 #include "../translator/translator.h"
 #include "structs.h"
+#include "../extensions/cof_queue_prop_src_port.h"
 
 
 
