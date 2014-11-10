@@ -22,7 +22,42 @@
 using namespace rofl;
 using namespace std;
 using namespace libconfig;
-
+ALHINP::ALHINP(){
+        
+    if(parse_config_file("ALHINP.cfg")!=0){
+        exit(EXIT_FAILURE);
+    }
+   
+    
+    
+    discover= new discovery(this);
+    manager= new orchestrator(this);
+    flowcache= new Flowcache(this);
+    virtualizer = new translator (this);
+    qosmap = new QoS (this);
+    char qos_file [4] = "QOS";
+    if(parse_qos_file(qos_file)!=0){
+        exit(EXIT_FAILURE);
+    }
+    
+    //Listen for AGS
+    std::cout << "Listening on "<< config.listening_IP_ags.c_str() <<":"<< std::dec <<(uint16_t) config.listening_ags_port<<" for AGS\n";
+    try{
+    rpc_listen_for_dpts(caddress(AF_INET, config.listening_IP_ags.c_str(),config.listening_ags_port));
+    }catch(...){
+        std::cout<<"Unable to Listen for AGS\n";
+        exit(EXIT_FAILURE);
+    }
+    //listen for OUI
+    std::cout << "Listening on "<< config.listening_IP_oui.c_str()<<":"<<config.listening_ags_port<<" for OUIs\n";
+    try{
+    rpc_listen_for_dpts(caddress(AF_INET, config.listening_IP_oui.c_str(), config.listening_oui_port));
+    }catch(...){
+        std::cout<<"Unable to Listen for OUIS\n";
+        exit(EXIT_FAILURE);
+    }
+    //test();
+}
 ALHINP::ALHINP(char* configfile): crofbase::crofbase((uint32_t)(1 << OFP10_VERSION) | (1 << OFP12_VERSION)){
     //listen for AGS
     
@@ -36,7 +71,6 @@ ALHINP::ALHINP(char* configfile): crofbase::crofbase((uint32_t)(1 << OFP10_VERSI
     flowcache= new Flowcache(this);
     virtualizer = new translator (this);
     qosmap = new QoS (this);
-    
     char qos_file [4] = "QOS";
     if(parse_qos_file(qos_file)!=0){
         exit(EXIT_FAILURE);
@@ -440,8 +474,16 @@ void ALHINP::handle_stats_reply (cofdpt *dpt, cofmsg_stats_reply *msg){
     return;
 }
 void ALHINP::test(){
-    
+    //virtualizer->get_own_dpid(1);
+    std::cout<<"he recibido un mensajito\n";
 }
 void ALHINP::handle_queue_get_config_request (cofctl *ctl, cofmsg_queue_get_config_request *msg){
    manager->handle_queue_get_config_request (ctl, msg);
+}
+void ALHINP::handle_experimenter_message(cofctl* ctl, cofmsg_experimenter* msg){
+    manager->handle_experimenter_message(ctl, msg);
+}
+
+void ALHINP::testing() {
+    //ALHINP::qosmap->check_queues(1);
 }

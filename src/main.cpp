@@ -17,18 +17,71 @@
 #include <rofl/common/ciosrv.h>
 #include "proxy/ALHINP.h"
 
+
+
+
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <microhttpd.h>
+
+#define PAGE "<html><head><title>libmicrohttpd demo</title></head><body>libmicrohttpd demo</body></html>"
+
 using namespace rofl;
+
+
+
 
 //Handler to stop ciosrv
 void interrupt_handler(int dummy=0) {
 	//Only stop ciosrv 
 	ciosrv::stop();
 }
-
 void TCL_finish(int dummy=0) {
 	//Only stop ciosrv 
     wait(NULL);
     
+}
+class ALHINP;
+ALHINP* ALHINP::singleton = NULL;
+bool ALHINP::instanceFlag=false;
+ALHINP* ALHINP::getInstance(){
+    if(! ALHINP::instanceFlag){
+        ALHINP::singleton = new ALHINP();
+        ALHINP::instanceFlag = true;
+        return singleton;
+    }else{
+        return singleton;
+    }
+}
+
+
+static int ahc_echo(void * cls,
+		    struct MHD_Connection * connection,
+		    const char * url,
+		    const char * method,
+                    const char * version,
+		    const char * upload_data,
+		    size_t * upload_data_size,
+                    void ** ptr) {
+    
+
+      
+  struct MHD_Response *response;
+  int ret;
+  ALHINP* instance;
+  instance = ALHINP::getInstance();
+  instance->test();
+    //string to be contructed;
+    const char *page = "<html><body>Hello, browser REST!</body></html>";
+  response =
+    MHD_create_response_from_buffer (strlen (page), (void *) page, 
+				     MHD_RESPMEM_PERSISTENT);
+  ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+  MHD_destroy_response (response);
+
+  return ret;
 }
 
 int main(int argc, char** argv){
@@ -50,10 +103,20 @@ int main(int argc, char** argv){
 
         rofl::ciosrv::init();
         
-        
+//        //ALHINP* ofdocsis;
+//        //ofdocsis = ALHINP::getInstance();
         ALHINP ofdocsis (argv[1]);
         
-
+//        struct MHD_Daemon * d;
+//        d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY,
+//		       8080,
+//		       NULL,
+//                       NULL,
+//		       &ahc_echo,
+//		       NULL,
+//                       MHD_OPTION_END);
+        
+        
         //ciosrv run. Only will stop in Ctrl+C
 	rofl::ciosrv::run();
 
@@ -63,6 +126,7 @@ int main(int argc, char** argv){
         
 	//ciosrv destroy
 	rofl::ciosrv::destroy();
+//        MHD_stop_daemon(d);
 	printf("House cleaned!\nGoodbye\n");
         fflush(stdout);
 	

@@ -39,6 +39,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/DOCSIS/DOCSISdriver.o \
 	${OBJECTDIR}/src/QoS/QoS.o \
 	${OBJECTDIR}/src/discovery/discovery.o \
+	${OBJECTDIR}/src/extensions/cof_queue_prop_src_port.o \
+	${OBJECTDIR}/src/extensions/cofmsg_set_queues.o \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/orchestrator/Flowcache.o \
 	${OBJECTDIR}/src/orchestrator/orchestrator.o \
@@ -60,7 +62,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lpthread -lafa -lrofl -lrofl_pipeline `pkg-config --libs libconfig++`  
+LDLIBSOPTIONS=-lpthread -lafa -lrofl -lrofl_pipeline `pkg-config --libs libconfig++` -lmicrohttpd  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -89,6 +91,16 @@ ${OBJECTDIR}/src/discovery/discovery.o: src/discovery/discovery.c++
 	${MKDIR} -p ${OBJECTDIR}/src/discovery
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 `pkg-config --cflags libconfig++` -std=c++98  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/discovery/discovery.o src/discovery/discovery.c++
+
+${OBJECTDIR}/src/extensions/cof_queue_prop_src_port.o: src/extensions/cof_queue_prop_src_port.cpp 
+	${MKDIR} -p ${OBJECTDIR}/src/extensions
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 `pkg-config --cflags libconfig++` -std=c++98  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/extensions/cof_queue_prop_src_port.o src/extensions/cof_queue_prop_src_port.cpp
+
+${OBJECTDIR}/src/extensions/cofmsg_set_queues.o: src/extensions/cofmsg_set_queues.cpp 
+	${MKDIR} -p ${OBJECTDIR}/src/extensions
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 `pkg-config --cflags libconfig++` -std=c++98  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/extensions/cofmsg_set_queues.o src/extensions/cofmsg_set_queues.cpp
 
 ${OBJECTDIR}/src/main.o: src/main.cpp 
 	${MKDIR} -p ${OBJECTDIR}/src

@@ -98,6 +98,7 @@ cofmatch process_matching(cofmatch match, uint8_t ofversion = OFP10_VERSION);
     void handle_flow_removed (cofdpt *dpt, cofmsg_flow_removed *msg);
     
     void handle_queue_get_config_request (cofctl *ctl, cofmsg_queue_get_config_request *msg);
+    void handle_experimenter_message(cofctl* ctl, cofmsg_experimenter* msg);
 };
 
 #endif	/* ORCHESTRATOR_H */

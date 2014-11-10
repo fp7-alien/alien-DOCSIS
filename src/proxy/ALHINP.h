@@ -31,8 +31,12 @@
 
 #include <list>
 
+#define TESTING 1;
+
 using namespace rofl;
 using namespace libconfig;
+
+static bool exec_mode;
 
 class ALHINP : public crofbase {
     
@@ -41,7 +45,6 @@ class ALHINP : public crofbase {
     friend Flowcache;
     friend translator;
     friend QoS;
-
     
 private:
     
@@ -54,20 +57,29 @@ private:
     ALHINPconfig config;
     ALHINPportconfig portconfig;
     QoS* qosmap;
+    
+    static ALHINP *singleton;
+    static bool instanceFlag;
+ 
 public:
+    ALHINP();
     ALHINP(char* configfile);
     ALHINP(const ALHINP& orig);
     virtual ~ALHINP();
-    void install_flowentry();
-    
+    //void install_flowentry();
+    static void testing();
+    void test();
+    static ALHINP* getInstance();
+
 private:
     /**
  * @brief Config File parsing function with format as described in
  * @param file
  * @return 
  */
+    
     int parse_config_file(char* file);
-    int parse_qos_file(char* file);
+    int parse_qos_file(char* file);    
     virtual void handle_timeout(int opaque);
     virtual void handle_dpath_open(cofdpt *dpt);
     virtual void handle_dpath_close(cofdpt *dpt);
@@ -116,9 +128,15 @@ private:
 
 //  virtual void handle_stats_request(cofctl* ctl, cofmsg_stats_request *msg);    
     virtual void handle_stats_reply (cofdpt *dpt, cofmsg_stats_reply *msg); 
+    virtual void handle_experimenter_message(cofctl* ctl, cofmsg_experimenter* msg);
 
-    void test();
+
+
+    
 };
+
+
+
 
 #endif	/* ALHINP_H */
 

@@ -17,6 +17,8 @@
         <itemPath>src/DOCSIS/DOCSISdriver.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f6" displayName="extensions" projectFiles="true">
+        <itemPath>src/extensions/cofmsg_set_queues.cpp</itemPath>
+        <itemPath>src/extensions/cofmsg_set_queues.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="orchestrator" projectFiles="true">
         <logicalFolder name="f1" displayName="FlowCache" projectFiles="true">
@@ -34,6 +36,8 @@
       <logicalFolder name="f7" displayName="QoS" projectFiles="true">
         <itemPath>src/QoS/QoS.c++</itemPath>
         <itemPath>src/QoS/QoS.h</itemPath>
+        <itemPath>src/extensions/cof_queue_prop_src_port.cpp</itemPath>
+        <itemPath>src/extensions/cof_queue_prop_src_port.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="translator" projectFiles="true">
         <itemPath>src/translator/translator.cpp</itemPath>
@@ -97,6 +101,23 @@
       </item>
       <item path="src/discovery/discovery.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="src/extensions/cof_queue_prop_src_port.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/extensions/cof_queue_prop_src_port.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/extensions/cofmsg_set_queues.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/extensions/cofmsg_set_queues.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/orchestrator/Flowcache.c++" ex="false" tool="1" flavor2="0">
@@ -127,11 +148,12 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
-          <standard>3</standard>
+          <standard>10</standard>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
           <standard>4</standard>
+          <commandlineTool>g++</commandlineTool>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -146,6 +168,7 @@
             <linkerLibLibItem>rofl</linkerLibLibItem>
             <linkerLibLibItem>rofl_pipeline</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs libconfig++`</linkerOptionItem>
+            <linkerLibLibItem>microhttpd</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -166,6 +189,23 @@
       <item path="src/discovery/discovery.c++" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/discovery/discovery.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/extensions/cof_queue_prop_src_port.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/extensions/cof_queue_prop_src_port.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/extensions/cofmsg_set_queues.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="src/extensions/cofmsg_set_queues.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="0">
       </item>

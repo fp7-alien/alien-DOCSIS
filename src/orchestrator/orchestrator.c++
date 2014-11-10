@@ -2521,6 +2521,21 @@ void      orchestrator::handle_queue_get_config_request(cofctl* ctl, cofmsg_queu
     delete msg;
 }
 
+void      orchestrator::handle_experimenter_message(cofctl* ctl, cofmsg_experimenter* msg){
+    if(msg->get_experimenter_id()==0x00FF00FF){
+        std::cout << "QoS extension RECEIVED\n";
+        //cmemory *messagemem=&(msg->get_body()); 
+        //cofmsg_queue_get_config_reply reply (messagemem);
+        std::cout<< msg->get_body().c_str() << "\n";
+
+        
+    }else{
+        std::cout << "unknown extension...DISCARDING\n";
+        
+    }
+    delete msg;
+}
+
 /******************************  TESTING FUNCTIONS ************************************/
 void      orchestrator::flow_test(cofdpt* dpt){
 
